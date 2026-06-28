@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Operations Overview · PulseIT{% endblock %}
+{% block context %}Overview{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ today_label }}</p>
+        <h1>Good morning, Alex.</h1>
+        <p>Here’s what’s happening across your IT environment.</p>
+    </div>
+    <div class="heading-actions">
+        <a class="button button-secondary" href="{{ url_for('main.asset_create') }}">
+            <svg><use href="#icon-monitor"></use></svg>
+            Add asset
+        </a>
+        <a class="button button-primary" href="{{ url_for('main.ticket_create') }}">
+            <svg><use href="#icon-plus"></use></svg>
+            New ticket
+        </a>
+    </div>
+</section>
+
+<section class="metric-grid" aria-label="Key performance indicators">
+    <article class="metric-card">
+        <div class="metric-top">
+            <span class="metric-icon metric-icon-blue"><svg><use href="#icon-monitor"></use></svg></span>
+            <span class="trend">Inventory</span>
+        </div>
+        <div class="metric-value">{{ asset_summary.total }}</div>
+        <p>Total managed assets</p>
+        <div class="metric-foot"><span class="live-dot"></span>{{ asset_summary.online }} currently online</div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-top">
+            <span class="metric-icon metric-icon-teal"><svg><use href="#icon-check"></use></svg></span>
+            <span class="trend {{ 'trend-positive' if online_percent >= 90 else '' }}">Live status</span>
+        </div>
+        <div class="metric-value">{{ online_percent }}<small>%</small></div>
+        <p>Fleet availability</p>
+        <div class="metric-foot">{{ asset_summary.total - asset_summary.online }} devices require attention</div>
+    </article>
+    <article class="metric-card">
+        <div class="metric-top">
+            <span class="metric-icon metric-icon-violet"><svg><use href="#icon-ticket"></use></svg></span>
+            <span class="trend">{{ ticket_summary.total }} total</span>
+        </div>
+        <div class="metric-value">{{ ticket_summary.active }}</div>
+        <p>Active service tickets</p>
+        <div class="metric-foot">{{ ticket_summary.resolved }} resolved this period</div>
+    </article>
+    <article class="metric-card {{ 'metric-card-alert' if ticket_summary.critical else '' }}">
+        <div class="metric-top">
+            <span class="metric-icon metric-icon-red"><svg><use href="#icon-alert"></use></svg></span>
+            <span class="trend {{ 'trend-negative' if ticket_summary.critical else 'trend-positive' }}">
+                {{ 'Action needed' if ticket_summary.critical else 'Clear' }}
+            </span>
+        </div>
+        <div class="metric-value">{{ ticket_summary.critical }}</div>
+        <p>Critical incidents</p>
+        <div class="metric-foot">Target response under 30 min</div>
+    </article>
+</section>
+
+<section class="dashboard-grid dashboard-grid-primary">
+    <article class="panel health-panel">
+        <header class="panel-header">
+            <div>
+                <h2>Device health</h2>
+                <p>Live status across managed assets</p>
+            </div>
+            <a href="{{ url_for('main.assets') }}">View inventory <svg><use href="#icon-arrow"></use></svg></a>
+        </header>
+        <div class="health-content">
+            <div class="donut-wrap">
+                <div class="donut" style="--online: {{ online_percent }};">
+                    <div>
+                        <strong>{{ online_percent }}%</strong>
+                        <span>Online</span>
+                    </div>
+                </div>
+            </div>
+            <div class="health-legend">
+                <div><span class="legend-dot status-online"></span><span>Online</span><strong>{{ asset_summary.online }}</strong></div>
+                <div><span class="legend-dot status-warning"></span><span>Warning</span><strong>{{ asset_summary.warning }}</strong></div>
+                <div><span class="legend-dot status-offline"></span><span>Offline</span><strong>{{ asset_summary.offline }}</strong></div>
+                <div><span class="legend-dot status-maintenance"></span><span>Maintenance</span><strong>{{ asset_summary.maintenance }}</strong></div>
+            </div>
+        </div>
+        <div class="type-bars">
+            {% set max_type = asset_types[0].count if asset_types else 1 %}
+            {% for item in asset_types[:5] %}
+            <div class="type-bar-row">
+                <span>{{ item.type }}</span>
+                <div class="bar-track"><span style="width: {{ (item.count / max_type * 100)|round }}%"></span></div>
+                <strong>{{ item.count }}</strong>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel ticket-overview">
+        <header class="panel-header">
+            <div>
+                <h2>Ticket overview</h2>
+                <p>Current service desk workload</p>
+            </div>
+            <span class="panel-period">All records</span>
+        </header>
+        <div class="ticket-chart">
+            {% set chart_max = namespace(value=1) %}
+            {% for item in status_counts %}
+                {% if item.count > chart_max.value %}{% set chart_max.value = item.count %}{% endif %}
+            {% endfor %}
+            {% for item in status_counts %}
+            <div class="chart-column">
+                <strong>{{ item.count }}</strong>
+                <div class="chart-bar-wrap">
+                    <span class="chart-bar chart-{{ item.status|lower|replace(' ', '-') }}" style="height: {{ 25 + (item.count / chart_max.value * 75) }}%"></span>
+                </div>
+                <span>{{ item.status }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="sla-callout">
+            <span class="metric-icon metric-icon-teal"><svg><use href="#icon-clock"></use></svg></span>
+            <div><strong>{{ resolution_percent }}% resolution rate</strong><span>{{ ticket_summary.resolved }} of {{ ticket_summary.total }} tickets completed</span></div>
+            <span class="trend trend-positive">Current</span>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-grid dashboard-grid-secondary">
+    <article class="panel queue-panel">
+        <header class="panel-header">
+            <div>
+                <h2>Priority queue</h2>
+                <p>Tickets that need attention first</p>
+            </div>
+            <a href="{{ url_for('main.tickets') }}">All tickets <svg><use href="#icon-arrow"></use></svg></a>
+        </header>
+        <div class="queue-list">
+            {% for ticket in priority_tickets %}
+            <a href="{{ url_for('main.ticket_detail', ticket_id=ticket.id) }}" class="queue-item">
+                <span class="priority-rail priority-{{ ticket.priority|lower }}"></span>
+                <div class="queue-main">
+                    <div class="queue-title">
+                        <span class="badge badge-priority badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                        <strong>{{ ticket.title }}</strong>
+                    </div>
+                    <span>{{ ticket.ticket_number }} · {{ ticket.category }}{% if ticket.asset_tag %} · {{ ticket.asset_tag }}{% endif %}</span>
+                </div>
+                <div class="queue-meta">
+                    <strong>{{ ticket.assigned_to or 'Unassigned' }}</strong>
+                    <span>{{ ticket.created_at|relative_time }}</span>
+                </div>
+                <svg class="queue-chevron"><use href="#icon-chevron"></use></svg>
+            </a>
+            {% else %}
+            <div class="empty-state"><p>Your priority queue is clear.</p></div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel activity-panel">
+        <header class="panel-header">
+            <div>
+                <h2>Recent activity</h2>
+                <p>Updates from your team and systems</p>
+            </div>
+        </header>
+        <div class="activity-list">
+            {% for activity in recent_activity %}
+            <div class="activity-item">
+                <span class="activity-icon activity-{{ activity.action }}">
+                    <svg><use href="#icon-{{ 'check' if activity.action == 'resolved' else 'alert' if activity.action in ('detected', 'maintenance') else 'ticket' }}"></use></svg>
+                </span>
+                <div>
+                    <p>{{ activity.description }}</p>
+                    <span>{{ activity.created_at|relative_time }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+{% endblock %}

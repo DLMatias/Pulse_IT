@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found · PulseIT{% endblock %}
+{% block context %}Not found{% endblock %}
+{% block content %}
+<section class="error-page">
+    <span>404</span>
+    <h1>That page stepped away from its desk.</h1>
+    <p>The resource may have moved, or the address may be incorrect.</p>
+    <a class="button button-primary" href="{{ url_for('main.dashboard') }}">Return to overview</a>
+</section>
+{% endblock %}

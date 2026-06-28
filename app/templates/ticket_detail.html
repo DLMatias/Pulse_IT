@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.ticket_number }} · PulseIT{% endblock %}
+{% block context %}Service desk / {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<section class="page-heading detail-heading">
+    <div>
+        <a class="back-link" href="{{ url_for('main.tickets') }}">← Back to service desk</a>
+        <div class="ticket-number-line">
+            <span>{{ ticket.ticket_number }}</span>
+            <span class="badge badge-priority badge-{{ ticket.priority|lower }}">{{ ticket.priority }} priority</span>
+        </div>
+        <h1>{{ ticket.title }}</h1>
+        <p>Opened by {{ ticket.requester }} · {{ ticket.created_at|relative_time }}</p>
+    </div>
+</section>
+
+<section class="detail-layout">
+    <div class="detail-main">
+        <article class="panel ticket-description">
+            <header class="panel-header"><div><h2>Issue description</h2><p>{{ ticket.category }} request</p></div></header>
+            <p>{{ ticket.description or 'No additional description was provided.' }}</p>
+        </article>
+        <article class="panel">
+            <header class="panel-header"><div><h2>Activity</h2><p>Ticket history and updates</p></div></header>
+            <div class="timeline">
+                {% if ticket.status == 'Resolved' %}
+                <div><span class="timeline-dot"><svg><use href="#icon-check"></use></svg></span><div><strong>Ticket resolved</strong><p>Resolution was recorded by {{ ticket.assigned_to or 'the support team' }}.</p><span>{{ ticket.resolved_at|datetime_display }}</span></div></div>
+                {% endif %}
+                {% if ticket.status not in ('Open', 'Resolved') %}
+                <div><span class="timeline-dot"><svg><use href="#icon-ticket"></use></svg></span><div><strong>Status changed to {{ ticket.status }}</strong><p>The request is currently being handled by {{ ticket.assigned_to or 'the support team' }}.</p><span>{{ ticket.updated_at|datetime_display }}</span></div></div>
+                {% endif %}
+                <div><span class="timeline-dot"><svg><use href="#icon-plus"></use></svg></span><div><strong>Ticket created</strong><p>{{ ticket.requester }} submitted this {{ ticket.category|lower }} request.</p><span>{{ ticket.created_at|datetime_display }}</span></div></div>
+            </div>
+        </article>
+    </div>
+    <aside class="detail-side">
+        <article class="panel status-card">
+            <header><h2>Ticket status</h2></header>
+            <form method="post">
+                <label class="field">
+                    <span>Current status</span>
+                    <select name="status">{% for status in statuses %}<option value="{{ status }}" {{ 'selected' if ticket.status == status }}>{{ status }}</option>{% endfor %}</select>
+                </label>
+                <button class="button button-primary button-full" type="submit">Update status</button>
+            </form>
+        </article>
+        <article class="panel ticket-facts">
+            <header><h2>Request details</h2></header>
+            <dl>
+                <div><dt>Assigned to</dt><dd>{{ ticket.assigned_to or 'Unassigned' }}</dd></div>
+                <div><dt>Requester</dt><dd>{{ ticket.requester }}</dd></div>
+                <div><dt>Department</dt><dd>{{ ticket.department or '—' }}</dd></div>
+                <div><dt>Category</dt><dd>{{ ticket.category }}</dd></div>
+                <div><dt>Related asset</dt><dd>{% if ticket.asset_id %}<a href="{{ url_for('main.asset_detail', asset_id=ticket.asset_id) }}">{{ ticket.asset_tag }}<br><small>{{ ticket.asset_name }}</small></a>{% else %}None{% endif %}</dd></div>
+            </dl>
+        </article>
+    </aside>
+</section>
+{% endblock %}
+

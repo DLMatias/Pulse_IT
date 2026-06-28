@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Asset' if asset else 'Add Asset' }} · PulseIT{% endblock %}
+{% block context %}Assets / {{ 'Edit' if asset else 'New' }}{% endblock %}
+
+{% block content %}
+<section class="page-heading compact-heading">
+    <div>
+        <a class="back-link" href="{{ url_for('main.asset_detail', asset_id=asset.id) if asset else url_for('main.assets') }}">← Back to {{ 'asset' if asset else 'inventory' }}</a>
+        <h1>{{ 'Edit asset' if asset else 'Add an asset' }}</h1>
+        <p>{{ 'Update lifecycle and ownership information.' if asset else 'Register a device in the managed inventory.' }}</p>
+    </div>
+</section>
+
+<form class="panel form-panel" method="post" novalidate>
+    <div class="form-section-heading">
+        <span class="form-step">01</span>
+        <div><h2>Device identity</h2><p>The information used to identify this asset.</p></div>
+    </div>
+    <div class="form-grid">
+        <label class="field">
+            <span>Asset tag <b>*</b></span>
+            <input name="asset_tag" value="{{ request.form.get('asset_tag', asset.asset_tag if asset else '') }}" placeholder="e.g. LAP-1054" {{ 'readonly' if asset }}>
+            {% if errors.asset_tag %}<small class="field-error">{{ errors.asset_tag }}</small>{% endif %}
+        </label>
+        <label class="field">
+            <span>Display name <b>*</b></span>
+            <input name="name" value="{{ request.form.get('name', asset.name if asset else '') }}" placeholder="e.g. ThinkPad - Operations">
+            {% if errors.name %}<small class="field-error">{{ errors.name }}</small>{% endif %}
+        </label>
+        <label class="field">
+            <span>Asset type <b>*</b></span>
+            {% set selected_type = request.form.get('type', asset.type if asset else '') %}
+            <select name="type"><option value="">Select a type</option>{% for type in asset_types %}<option value="{{ type }}" {{ 'selected' if selected_type == type }}>{{ type }}</option>{% endfor %}</select>
+            {% if errors.type %}<small class="field-error">{{ errors.type }}</small>{% endif %}
+        </label>
+        <label class="field">
+            <span>Status <b>*</b></span>
+            {% set selected_status = request.form.get('status', asset.status if asset else 'Online') %}
+            <select name="status">{% for status in statuses %}<option value="{{ status }}" {{ 'selected' if selected_status == status }}>{{ status }}</option>{% endfor %}</select>
+            {% if errors.status %}<small class="field-error">{{ errors.status }}</small>{% endif %}
+        </label>
+    </div>
+
+    <div class="form-divider"></div>
+    <div class="form-section-heading">
+        <span class="form-step">02</span>
+        <div><h2>Hardware &amp; software</h2><p>Technical specifications and network details.</p></div>
+    </div>
+    <div class="form-grid">
+        <label class="field">
+            <span>Manufacturer <b>*</b></span>
+            <input name="manufacturer" value="{{ request.form.get('manufacturer', asset.manufacturer if asset else '') }}" placeholder="e.g. Lenovo">
+            {% if errors.manufacturer %}<small class="field-error">{{ errors.manufacturer }}</small>{% endif %}
+        </label>
+        <label class="field">
+            <span>Model <b>*</b></span>
+            <input name="model" value="{{ request.form.get('model', asset.model if asset else '') }}" placeholder="e.g. ThinkPad T14 Gen 4">
+            {% if errors.model %}<small class="field-error">{{ errors.model }}</small>{% endif %}
+        </label>
+        <label class="field">
+            <span>Operating system</span>
+            <input name="operating_system" value="{{ request.form.get('operating_system', asset.operating_system if asset else '') }}" placeholder="e.g. Windows 11 Pro">
+        </label>
+        <label class="field">
+            <span>IP address</span>
+            <input name="ip_address" value="{{ request.form.get('ip_address', asset.ip_address if asset else '') }}" placeholder="e.g. 10.20.1.54">
+        </label>
+    </div>
+
+    <div class="form-divider"></div>
+    <div class="form-section-heading">
+        <span class="form-step">03</span>
+        <div><h2>Assignment &amp; lifecycle</h2><p>Ownership, location, and warranty details.</p></div>
+    </div>
+    <div class="form-grid">
+        <label class="field"><span>Assigned to</span><input name="assigned_to" value="{{ request.form.get('assigned_to', asset.assigned_to if asset else '') }}" placeholder="Person or team"></label>
+        <label class="field"><span>Department</span><input name="department" value="{{ request.form.get('department', asset.department if asset else '') }}" placeholder="e.g. Finance"></label>
+        <label class="field">
+            <span>Location <b>*</b></span>
+            <input name="location" value="{{ request.form.get('location', asset.location if asset else '') }}" placeholder="e.g. New York">
+            {% if errors.location %}<small class="field-error">{{ errors.location }}</small>{% endif %}
+        </label>
+        <div></div>
+        <label class="field"><span>Purchase date</span><input type="date" name="purchase_date" value="{{ request.form.get('purchase_date', asset.purchase_date if asset and asset.purchase_date else '') }}"></label>
+        <label class="field"><span>Warranty end</span><input type="date" name="warranty_end" value="{{ request.form.get('warranty_end', asset.warranty_end if asset and asset.warranty_end else '') }}"></label>
+    </div>
+    <div class="form-actions">
+        <a class="button button-secondary" href="{{ url_for('main.asset_detail', asset_id=asset.id) if asset else url_for('main.assets') }}">Cancel</a>
+        <button class="button button-primary" type="submit">{{ 'Save changes' if asset else 'Add to inventory' }}</button>
+    </div>
+</form>
+{% endblock %}
+

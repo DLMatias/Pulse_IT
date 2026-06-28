@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ asset.asset_tag }} · PulseIT{% endblock %}
+{% block context %}Assets / {{ asset.asset_tag }}{% endblock %}
+
+{% block content %}
+<section class="page-heading detail-heading">
+    <div>
+        <a class="back-link" href="{{ url_for('main.assets') }}">← Back to inventory</a>
+        <div class="title-with-status">
+            <h1>{{ asset.name }}</h1>
+            <span class="status-pill status-pill-{{ asset.status|lower }}"><span></span>{{ asset.status }}</span>
+        </div>
+        <p>{{ asset.asset_tag }} · {{ asset.type }} · Last seen {{ asset.last_seen|relative_time }}</p>
+    </div>
+    <a class="button button-primary" href="{{ url_for('main.asset_edit', asset_id=asset.id) }}"><svg><use href="#icon-edit"></use></svg>Edit asset</a>
+</section>
+
+<section class="detail-layout">
+    <div class="detail-main">
+        <article class="panel">
+            <header class="panel-header"><div><h2>Device information</h2><p>Hardware and network configuration</p></div></header>
+            <dl class="detail-grid">
+                <div><dt>Manufacturer</dt><dd>{{ asset.manufacturer }}</dd></div>
+                <div><dt>Model</dt><dd>{{ asset.model }}</dd></div>
+                <div><dt>Operating system</dt><dd>{{ asset.operating_system or '—' }}</dd></div>
+                <div><dt>IP address</dt><dd><code>{{ asset.ip_address or '—' }}</code></dd></div>
+                <div><dt>Asset type</dt><dd>{{ asset.type }}</dd></div>
+                <div><dt>Asset tag</dt><dd><code>{{ asset.asset_tag }}</code></dd></div>
+            </dl>
+        </article>
+        <article class="panel">
+            <header class="panel-header">
+                <div><h2>Related tickets</h2><p>Service history for this device</p></div>
+                <a href="{{ url_for('main.ticket_create') }}">Create ticket <svg><use href="#icon-arrow"></use></svg></a>
+            </header>
+            <div class="mini-list">
+                {% for ticket in linked_tickets %}
+                <a href="{{ url_for('main.ticket_detail', ticket_id=ticket.id) }}">
+                    <span class="badge badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                    <div><strong>{{ ticket.title }}</strong><span>{{ ticket.ticket_number }} · {{ ticket.created_at|date_display }}</span></div>
+                    <span class="status-pill status-pill-{{ ticket.status|lower|replace(' ', '-') }}"><span></span>{{ ticket.status }}</span>
+                </a>
+                {% else %}
+                <div class="empty-state"><p>No service tickets are linked to this asset.</p></div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+    <aside class="detail-side">
+        <article class="panel owner-card">
+            <header><h2>Assignment</h2></header>
+            <div class="owner-profile"><span class="avatar">{{ (asset.assigned_to or 'U')[:2]|upper }}</span><div><strong>{{ asset.assigned_to or 'Unassigned' }}</strong><span>{{ asset.department or 'No department' }}</span></div></div>
+            <div class="side-detail"><svg><use href="#icon-location"></use></svg><div><span>Location</span><strong>{{ asset.location }}</strong></div></div>
+        </article>
+        <article class="panel lifecycle-card">
+            <header><h2>Lifecycle</h2></header>
+            <div class="side-detail"><svg><use href="#icon-calendar"></use></svg><div><span>Purchased</span><strong>{{ asset.purchase_date|date_display }}</strong></div></div>
+            <div class="side-detail"><svg><use href="#icon-check"></use></svg><div><span>Warranty ends</span><strong>{{ asset.warranty_end|date_display }}</strong></div></div>
+        </article>
+    </aside>
+</section>
+{% endblock %}

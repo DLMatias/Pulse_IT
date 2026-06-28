@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Asset Inventory · PulseIT{% endblock %}
+{% block context %}Assets{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Infrastructure</p>
+        <h1>Asset inventory</h1>
+        <p>Track ownership, health, and lifecycle details across your fleet.</p>
+    </div>
+    <a class="button button-primary" href="{{ url_for('main.asset_create') }}">
+        <svg><use href="#icon-plus"></use></svg>
+        Add asset
+    </a>
+</section>
+
+<section class="panel data-panel">
+    <form class="filter-bar" method="get">
+        <label class="search-field">
+            <svg><use href="#icon-search"></use></svg>
+            <input type="search" name="q" value="{{ filters.q }}" placeholder="Search assets, people, or models">
+        </label>
+        <label>
+            <span class="sr-only">Filter by status</span>
+            <select name="status">
+                <option value="">All statuses</option>
+                {% for status in statuses %}<option value="{{ status }}" {{ 'selected' if filters.status == status }}>{{ status }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>
+            <span class="sr-only">Filter by asset type</span>
+            <select name="type">
+                <option value="">All types</option>
+                {% for type in asset_types %}<option value="{{ type }}" {{ 'selected' if filters.type == type }}>{{ type }}</option>{% endfor %}
+            </select>
+        </label>
+        <button class="button button-secondary" type="submit">Apply filters</button>
+        {% if filters.q or filters.status or filters.type %}
+        <a class="text-link" href="{{ url_for('main.assets') }}">Clear</a>
+        {% endif %}
+    </form>
+    <div class="table-summary">
+        <strong>{{ assets|length }}</strong> assets shown
+        <span>Updated in real time</span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Asset</th><th>Status</th><th>Assigned to</th><th>Location</th><th>Last seen</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for asset in assets %}
+                <tr>
+                    <td>
+                        <a class="asset-cell" href="{{ url_for('main.asset_detail', asset_id=asset.id) }}">
+                            <span class="device-icon"><svg><use href="#icon-{{ 'server' if asset.type in ('Server', 'Network') else 'monitor' }}"></use></svg></span>
+                            <span><strong>{{ asset.name }}</strong><small>{{ asset.asset_tag }} · {{ asset.manufacturer }} {{ asset.model }}</small></span>
+                        </a>
+                    </td>
+                    <td><span class="status-pill status-pill-{{ asset.status|lower }}"><span></span>{{ asset.status }}</span></td>
+                    <td><strong class="table-primary">{{ asset.assigned_to or 'Unassigned' }}</strong><small>{{ asset.department or '—' }}</small></td>
+                    <td>{{ asset.location }}</td>
+                    <td>{{ asset.last_seen|relative_time }}</td>
+                    <td><a class="row-action" href="{{ url_for('main.asset_detail', asset_id=asset.id) }}" aria-label="View {{ asset.name }}"><svg><use href="#icon-chevron"></use></svg></a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6"><div class="empty-state"><h3>No assets found</h3><p>Try changing your filters or add a new device.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}New Ticket · PulseIT{% endblock %}
+{% block context %}Service desk / New{% endblock %}
+
+{% block content %}
+<section class="page-heading compact-heading">
+    <div>
+        <a class="back-link" href="{{ url_for('main.tickets') }}">← Back to service desk</a>
+        <h1>Open a service ticket</h1>
+        <p>Capture the issue, impact, and ownership details for triage.</p>
+    </div>
+</section>
+
+<form class="panel form-panel" method="post" novalidate>
+    <div class="form-section-heading">
+        <span class="form-step">01</span>
+        <div><h2>Request details</h2><p>Describe what the user needs help with.</p></div>
+    </div>
+    <div class="form-grid">
+        <label class="field field-span">
+            <span>Subject <b>*</b></span>
+            <input name="title" value="{{ request.form.get('title', '') }}" placeholder="Briefly describe the issue">
+            {% if errors.title %}<small class="field-error">{{ errors.title }}</small>{% endif %}
+        </label>
+        <label class="field field-span">
+            <span>Description</span>
+            <textarea name="description" rows="4" placeholder="Include symptoms, business impact, and any troubleshooting already attempted.">{{ request.form.get('description', '') }}</textarea>
+        </label>
+        <label class="field">
+            <span>Category <b>*</b></span>
+            <select name="category"><option value="">Select a category</option>{% for category in categories %}<option value="{{ category }}" {{ 'selected' if request.form.get('category') == category }}>{{ category }}</option>{% endfor %}</select>
+            {% if errors.category %}<small class="field-error">{{ errors.category }}</small>{% endif %}
+        </label>
+        <label class="field">
+            <span>Priority <b>*</b></span>
+            <select name="priority"><option value="">Select impact</option>{% for priority in priorities %}<option value="{{ priority }}" {{ 'selected' if request.form.get('priority') == priority }}>{{ priority }}</option>{% endfor %}</select>
+            {% if errors.priority %}<small class="field-error">{{ errors.priority }}</small>{% endif %}
+        </label>
+    </div>
+
+    <div class="form-divider"></div>
+    <div class="form-section-heading">
+        <span class="form-step">02</span>
+        <div><h2>Requester &amp; ownership</h2><p>Who needs help and who will handle it.</p></div>
+    </div>
+    <div class="form-grid">
+        <label class="field">
+            <span>Requester name <b>*</b></span>
+            <input name="requester" value="{{ request.form.get('requester', '') }}" placeholder="Full name">
+            {% if errors.requester %}<small class="field-error">{{ errors.requester }}</small>{% endif %}
+        </label>
+        <label class="field"><span>Requester email</span><input type="email" name="requester_email" value="{{ request.form.get('requester_email', '') }}" placeholder="name@example.com"></label>
+        <label class="field"><span>Department</span><input name="department" value="{{ request.form.get('department', '') }}" placeholder="e.g. Finance"></label>
+        <label class="field"><span>Assigned technician</span><input name="assigned_to" value="{{ request.form.get('assigned_to', '') }}" placeholder="Leave blank for unassigned"></label>
+        <label class="field field-span">
+            <span>Related asset</span>
+            <select name="asset_id">
+                <option value="">No related asset</option>
+                {% for asset in assets %}<option value="{{ asset.id }}" {{ 'selected' if request.form.get('asset_id') == asset.id|string }}>{{ asset.asset_tag }} — {{ asset.name }}</option>{% endfor %}
+            </select>
+        </label>
+    </div>
+    <div class="form-actions">
+        <a class="button button-secondary" href="{{ url_for('main.tickets') }}">Cancel</a>
+        <button class="button button-primary" type="submit">Create ticket</button>
+    </div>
+</form>
+{% endblock %}
+
